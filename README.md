@@ -1,6 +1,6 @@
 <div align="center">
-    <h1> ... </h1>
-    Midterms mini-project of Computer Vision
+    <h1> Textify </h1>
+    Midterms mini-project of Computer Vision classes
 </div>
 
 ---
