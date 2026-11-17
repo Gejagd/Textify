@@ -1,6 +1,6 @@
 <div align="center">
-    <h1> Textify </h1>
-    Midterms mini-project of Computer Vision classes
+    <h1> TEXTIFY </h1>
+    Midterms mini-project of Computer Vision with Python implementation.
 </div>
 
 ---
@@ -27,13 +27,29 @@ python3 --version
 As for the version, it was build & compatible with 3.14+ python version.
 
 ## Architechture
+This is our (current) project architechture.
 ```
-isi
+Textify/
+├── docs/
+│   ├── flowchart/
+│   └── research/
+├── src/
+|   └── test_unit/
+├── .gitignore
+├── requirement.txt
+└── README.md
 ```
 
 
 ## Build & Execution
-To use of this program, you can follow theis command :
+First of all, you must download requirement of the library its needed, 
+for that you can use this following command :
+```bash
+pip install -r requirement.txt
+``` 
+And don't worry, it was compatible with all the os, just one of python 
+deffault command.
+To use of this program, you can follow these command :
 - windows :
 ```bash
 python main.py
@@ -44,7 +60,8 @@ python3 main.py
 ```
 
 ## Verification & Testing
-isi
+To see and check if the program has any bugs and errors, you can use 
+these command.
 ```bash
 isi
 ```
@@ -63,7 +80,8 @@ isi
 
 
 ## Research Paper
-isi
+This is our simple [paper research](./docs/research/paper.md) of this 
+project.
 
 ---
 
