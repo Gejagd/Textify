@@ -1,1 +1,15 @@
-# This will be the main execution program
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(__file__))
+
+from app import TextifyApp
+
+
+def main() -> int:
+    app = TextifyApp()
+    return app.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
