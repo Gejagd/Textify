@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from document_detector import DocumentDetector
+from finger_remover import FingerRemover
 
 
 GAUSSIAN_KERNEL_SIZE = (5, 5)
@@ -11,9 +13,22 @@ MORPH_ITERATIONS = 1
 
 
 class ImageProcessor:
+    def __init__(self):
+        self._detector = DocumentDetector()
+        self._finger_remover = FingerRemover()
+
+    def crop_document(self, image: np.ndarray) -> np.ndarray:
+        contour_pts = self._detector.find_document_contour(image)
+        if contour_pts is None:
+            return image.copy()
+        return self._detector.warp_perspective(image, contour_pts)
+
+    def remove_fingers(self, image: np.ndarray) -> np.ndarray:
+        return self._finger_remover.remove_fingers(image)
+
     def to_grayscale(self, image: np.ndarray) -> np.ndarray:
         if len(image.shape) == 2:
-            return image
+            return image.copy()
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     def denoise(self, gray: np.ndarray) -> np.ndarray:
@@ -39,7 +54,9 @@ class ImageProcessor:
         return opened
 
     def process(self, image: np.ndarray) -> np.ndarray:
-        gray = self.to_grayscale(image)
+        cropped = self.crop_document(image)
+        finger_cleaned = self.remove_fingers(cropped)
+        gray = self.to_grayscale(finger_cleaned)
         blurred = self.denoise(gray)
         binary = self.binarize(blurred)
         result = self.clean_noise(binary)

@@ -10,12 +10,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from image_processor import ImageProcessor
 from image_exporter import ImageExporter
 from image_source import ImageSourceFactory, FileImageSource, CameraImageSource
+from document_detector import DocumentDetector
+from finger_remover import FingerRemover
 from app import TextifyApp
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _make_bgr(h: int = 64, w: int = 64) -> np.ndarray:
     img = np.zeros((h, w, 3), dtype=np.uint8)
@@ -23,15 +21,79 @@ def _make_bgr(h: int = 64, w: int = 64) -> np.ndarray:
     img[0:10, 0:10] = [255, 255, 255]
     return img
 
+
 def _make_gray(h: int = 64, w: int = 64) -> np.ndarray:
     img = np.full((h, w), 200, dtype=np.uint8)
     img[20:40, 20:40] = 50
     return img
 
 
-# ---------------------------------------------------------------------------
-# ImageProcessor Tests
-# ---------------------------------------------------------------------------
+def _make_image_with_document(h: int = 200, w: int = 200) -> np.ndarray:
+    img = np.zeros((h, w, 3), dtype=np.uint8)
+    img[30:170, 30:170] = [240, 240, 240]
+    img[50:60, 50:150] = [0, 0, 0]
+    return img
+
+
+class TestDocumentDetector(unittest.TestCase):
+    def setUp(self):
+        self.detector = DocumentDetector()
+
+    def test_order_points_shape_and_order(self):
+        pts = np.array([[100, 100], [0, 100], [100, 0], [0, 0]], dtype=np.float32)
+        ordered = self.detector.order_points(pts)
+        self.assertEqual(ordered.shape, (4, 2))
+        np.testing.assert_array_equal(ordered[0], [0, 0])
+        np.testing.assert_array_equal(ordered[2], [100, 100])
+
+    def test_find_document_contour_success(self):
+        img = _make_image_with_document()
+        contour = self.detector.find_document_contour(img)
+        self.assertIsNotNone(contour)
+        self.assertEqual(contour.shape, (4, 2))
+
+    def test_find_document_contour_none_when_blank(self):
+        blank = np.zeros((100, 100, 3), dtype=np.uint8)
+        contour = self.detector.find_document_contour(blank)
+        self.assertIsNone(contour)
+
+    def test_warp_perspective_shape(self):
+        img = _make_image_with_document()
+        pts = np.array([[30, 30], [170, 30], [170, 170], [30, 170]], dtype=np.float32)
+        warped = self.detector.warp_perspective(img, pts)
+        self.assertGreater(warped.shape[0], 0)
+        self.assertGreater(warped.shape[1], 0)
+        self.assertEqual(len(warped.shape), 3)
+
+
+class TestFingerRemover(unittest.TestCase):
+    def setUp(self):
+        self.remover = FingerRemover()
+
+    def test_detect_skin_mask_shape(self):
+        img = _make_bgr(100, 100)
+        mask = self.remover.detect_skin_mask(img)
+        self.assertEqual(mask.shape, (100, 100))
+        self.assertEqual(mask.dtype, np.uint8)
+
+    def test_detect_skin_mask_grayscale_input_returns_zeros(self):
+        gray = _make_gray(50, 50)
+        mask = self.remover.detect_skin_mask(gray)
+        self.assertEqual(mask.shape, (50, 50))
+        self.assertEqual(np.count_nonzero(mask), 0)
+
+    def test_remove_fingers_leaves_clean_document_intact(self):
+        img = np.full((80, 80, 3), 255, dtype=np.uint8)
+        cleaned = self.remover.remove_fingers(img)
+        self.assertEqual(cleaned.shape, img.shape)
+
+    def test_remove_fingers_on_skin_patch(self):
+        img = np.full((100, 100, 3), 240, dtype=np.uint8)
+        skin_bgr = [140, 170, 220]
+        img[40:60, 40:60] = skin_bgr
+        cleaned = self.remover.remove_fingers(img)
+        self.assertEqual(cleaned.shape, img.shape)
+
 
 class TestImageProcessorGrayscale(unittest.TestCase):
     def setUp(self):
@@ -146,10 +208,12 @@ class TestImageProcessorFullPipeline(unittest.TestCase):
         self.proc.process(bgr)
         np.testing.assert_array_equal(bgr, original)
 
+    def test_process_crops_detected_document(self):
+        img = _make_image_with_document()
+        result = self.proc.process(img)
+        self.assertEqual(len(result.shape), 2)
+        self.assertLess(result.shape[0], img.shape[0])
 
-# ---------------------------------------------------------------------------
-# ImageExporter Tests
-# ---------------------------------------------------------------------------
 
 class TestImageExporter(unittest.TestCase):
     def setUp(self):
@@ -173,13 +237,22 @@ class TestImageExporter(unittest.TestCase):
 
     def test_export_preserves_png_extension(self):
         img = np.full((32, 32), 255, dtype=np.uint8)
-        path = self.exporter.export(img, "already.png")
+        path = self.exporter.export(img, "already.png", auto_increment=False)
         self.assertEqual(path.name, "already.png")
 
     def test_export_returns_correct_path(self):
         img = np.full((32, 32), 255, dtype=np.uint8)
         path = self.exporter.export(img, "myfile")
         self.assertIn("myfile", str(path))
+
+    def test_export_auto_increments_filenames(self):
+        img = np.full((32, 32), 255, dtype=np.uint8)
+        path1 = self.exporter.export(img, "doc")
+        path2 = self.exporter.export(img, "doc")
+        path3 = self.exporter.export(img, "doc")
+        self.assertEqual(path1.name, "doc_01.png")
+        self.assertEqual(path2.name, "doc_02.png")
+        self.assertEqual(path3.name, "doc_03.png")
 
     def test_export_creates_dir_if_missing(self):
         new_dir = Path(self.tmp_dir) / "subdir" / "nested"
@@ -191,10 +264,6 @@ class TestImageExporter(unittest.TestCase):
     def test_get_output_dir(self):
         self.assertEqual(self.exporter.get_output_dir(), Path(self.tmp_dir))
 
-
-# ---------------------------------------------------------------------------
-# ImageSource / Factory Tests
-# ---------------------------------------------------------------------------
 
 class TestImageSourceFactory(unittest.TestCase):
     def test_file_mode_returns_file_source(self):
@@ -267,10 +336,6 @@ class TestCameraImageSource(unittest.TestCase):
         result = source.acquire()
         self.assertIsNotNone(result)
 
-
-# ---------------------------------------------------------------------------
-# TextifyApp Integration Tests
-# ---------------------------------------------------------------------------
 
 class TestTextifyApp(unittest.TestCase):
     def _make_app_with_tmp(self):
