@@ -58,14 +58,22 @@ python main.py
 ```bash
 python3 main.py
 ```
+Nb.
+And i expect you were on the root of the folder.
 
 ## Verification & Testing
 To see and check if the program has any bugs and errors, you can use 
-these command.
+these command to see if anything broken.
+- windows :
 ```bash
-isi
+python test_unit/unit_test.py
 ```
-
+- unix based os :
+```bash
+python3 test_unit/unit_test.py
+```
+Nb.
+And i expect you were on the root of the folder.
 
 ## Experimental Results
 isi
