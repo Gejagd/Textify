@@ -76,7 +76,9 @@ Nb.
 And i expect you were on the root of the folder.
 
 ## Experimental Results
-isi
+As for our results wouldn't be included in the `docs/results/' folder 
+as is most of our samples were private work documents, so you could 
+try it yourself, go give it a try! :D
 
 
 ## Limitations & Risks
@@ -94,4 +96,5 @@ project.
 ---
 
 <div align="center">
-    
+    Made with confusion and lot of tea :D
+</div>
