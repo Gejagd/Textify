@@ -6,6 +6,7 @@
 
 # python cache
 **/*__pycache__*/
+**/*.pytest_cache*/
 
 # results of the scan
 **/results/*
