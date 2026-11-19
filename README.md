@@ -115,7 +115,7 @@ Transform, and Adaptive Thresholding.
 
 
 ## Research Paper
-This is our simple [paper research](./docs/research/paper.md) of this 
+This is our simple [informal paper research](./docs/research/paper.md) of this 
 project.
 
 ---
