@@ -2,10 +2,10 @@
 **/*.venv*/
 **/*.env*/
 **/*env*/
-**/venv*/
+**/*venv*/
 
-# python cache
-**/*__pycache__*/
+# cache
+**/*cache*/
 
 # results of the scan
 **/results/*
