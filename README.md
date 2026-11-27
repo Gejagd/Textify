@@ -44,8 +44,23 @@ Textify/                        : Root folder of this project.
 
 
 ## Build & Execution
-First of all, you must download requirement of the library its needed, 
+First of all, you must make venv and download requirement of the library its needed, 
 for that you can use this following command :
+```bash
+python -m venv .venv
+```
+And then : 
+```bash
+source .venv/bin/activate
+```
+for unix based OS. And for Windows (Especially Powershell) : 
+```bash
+.\.venv\Scripts\activate
+```
+And don't forget to activate permission first if it was your first time using .venv 
+in Windows. As for user Git Bash in Windows, the command for Unix Based is almost the 
+same but with changes `Scripts` than `bin`. After that you could make follow the next 
+command : 
 ```bash
 pip install -r requirement.txt
 ``` 
